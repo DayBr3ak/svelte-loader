@@ -93,11 +93,18 @@ module.exports = function(source, map) {
 	const isServer = this.target === 'node' || (options.generate && options.generate == 'ssr');
 	const isProduction = this.minimize || process.env.NODE_ENV === 'production';
 
+	const filterWarnings = fn => warning => {
+		if (options.ignoreWarnings.indexOf(warning.code) === -1) {
+			fn(warning)
+		}
+	}
+	
 	options.filename = this.resourcePath;
 	if (!('format' in options)) options.format = 'es';
 	if (!('shared' in options)) options.shared = options.format === 'es' && 'svelte/shared.js';
 	if (!('name' in options)) options.name = capitalize(sanitize(options.filename));
-	if (!('onwarn' in options)) options.onwarn = warning => this.emitWarning(new Error(warning));
+	if (!('ignoreWarnings' in options)) options.ignoreWarnings = []
+	if (!('onwarn' in options)) options.onwarn = filterWarnings(warning => this.emitWarning(new Error(warning)));
 	if (options.emitCss) options.css = false;
 
 	deprecatePreprocessOptions(options);
